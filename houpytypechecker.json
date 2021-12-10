@@ -1,0 +1,8 @@
+{
+	"path": "$HOUPYTYPECHECKER",
+    "env": [
+        {
+            "HOUPYTYPECHECKER": "$HOUDINI_PACKAGE_PATH/houpytypechecker"
+        }
+    ]
+}

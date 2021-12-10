@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="houpytypechecker" label="Python Type Checker">
+    <memberTool name="checktype"/>
+  </toolshelf>
+
+  <tool name="checktype" label="Check Type" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import sys
+import os
+import subprocess
+from subprocess import PIPE
+
+def check_code_by_mypy(code):
+    command = ['mypy']
+    additional_options_raw = hou.getenv('MYPY_ADDITIONAL_OPTIONS', '')
+    if additional_options_raw != '':
+        command += additional_options_raw.split(' ')
+    command += [
+        '-c',
+        code
+    ]
+    proc = subprocess.run(command, stdout=PIPE, stderr=PIPE, text=True)
+    if proc.returncode == 0:
+        print(proc.stdout)
+    else:
+        print(proc.stdout)
+        print(proc.stderr)
+    return
+    
+def check_hda(definition):
+    section_name_whitelist = [
+        'Expressions',
+        'PythonModule',
+        'BeforeFirstCreate',
+        'OnCreated',
+        'OnLoaded',
+        'OnUpdated',
+        'OnDeleted',
+        'AfterLastDelete',
+        'OnInputChanged',
+        'OnNameChanged',
+        'OnInstall',
+        'OnUninstall',
+        'SyncNodeVersion'
+    ]
+
+    for key, value in definition.sections().items():
+        if key not in section_name_whitelist: continue
+        code = value.contents()
+        print(key)
+        print('========')
+        check_code_by_mypy(code)
+
+def check_code_parm(source, parm_name, display_name, *, import_headers = []):
+    code = source.parm(parm_name).eval()
+    code = '\n'.join(import_headers) + '\n'+ code
+
+    print(display_name)
+    print('========')
+    check_code_by_mypy(code)
+
+def check_type():
+    source = hou.selectedNodes()[0]
+    if source is None: return
+
+    # HDA
+    definition = source.type().definition()
+    if definition is not None: check_hda(definition)
+    
+    # Python SOP
+    if source.type().name() == 'python': check_code_parm(source, 'python', 'Python SOP', import_headers = ['import hou'])
+
+check_type()]]></script>
+  </tool>
+</shelfDocument>
